@@ -1,47 +1,34 @@
-version: '3.8'
-
+version: '3'
 services:
-  mongo:
+  # Servicio MongoDB
+  mongodb:
     image: mongo:latest
     container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
-      - mongo-data:/data/db
-    networks:
-      - app-network
-
-  reseñas-service
-    image: reseñas:latest
-    container_name: reseñas-service
-    depends_on:
-      - mongo
+      - mongodb_data:/data/db
     environment:
-      - SPRING_DATA_MONGODB_HOST=mongo
-      - SPRING_DATA_MONGODB_PORT=27017
-      - SPRING_DATA_MONGODB_DATABASE=reseñasdb
-    ports:
-      - "8081:8081"
-    networks:
-      - app-network
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
 
-  ventas-service:
-    image: ventas:latest
-    container_name: ventas-service
+  # Servicio para la aplicación Java
+  app:
+    build: ./app
+    container_name: java_app
     depends_on:
-      - mongo
-    environment:
-      - SPRING_DATA_MONGODB_HOST=mongo
-      - SPRING_DATA_MONGODB_PORT=27017
-      - SPRING_DATA_MONGODB_DATABASE=ventasdb
+      - mongodb
     ports:
-      - "8082:8082"
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      - "8080:8080"
+    environment:
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_DB: supermercado
+      MONGO_USER: root
+      MONGO_PASSWORD: password
+    volumes:
+      - ./app:/usr/src/app
+    command: ["java", "-jar", "/usr/src/app/app.jar"]
 
 volumes:
-  mongo-data:
+  mongodb_data:
